@@ -1,7 +1,7 @@
 # =========================
 # Stage 1: build rust
 # =========================
-FROM rust:1.75 AS rust-builder
+FROM rust:latest AS rust-builder
 
 WORKDIR /app
 
