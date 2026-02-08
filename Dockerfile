@@ -1,7 +1,7 @@
 # =========================
 # Stage 1: Build sshx-server
 # =========================
-FROM rust:1.82-slim AS rust-builder
+FROM rust:1.83-slim AS rust-builder
 
 RUN apt-get update && apt-get install -y \
     protobuf-compiler \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# ---- Copy TOÀN BỘ workspace (tránh thiếu crate) ----
+# ---- Copy toàn bộ workspace (tránh thiếu crate) ----
 COPY . .
 
 # ---- Build đúng binary ----
