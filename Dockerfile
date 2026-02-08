@@ -1,22 +1,41 @@
-FROM rust:alpine AS backend
-WORKDIR /home/rust/src
-RUN apk --no-cache add musl-dev openssl-dev protoc
-RUN rustup component add rustfmt
-COPY . .
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/home/rust/src/target \
-    cargo build --release --bin sshx-server && \
-    cp target/release/sshx-server /usr/local/bin
+# =========================
+# Stage 1: build rust
+# =========================
+FROM rust:1.75 AS rust-builder
 
-FROM node:lts-alpine AS frontend
-RUN apk --no-cache add git
-WORKDIR /usr/src/app
-COPY . .
-RUN npm ci
-RUN npm run build
+WORKDIR /app
 
-FROM alpine:latest
-WORKDIR /root
-COPY --from=frontend /usr/src/app/build build
-COPY --from=backend /usr/local/bin/sshx-server .
-CMD ["./sshx-server", "--listen", "::"]
+# Copy toàn bộ source
+COPY . .
+
+# Build & install sshx
+RUN cargo install --path crates/sshx-core
+RUN cargo install --path crates/sshx-server
+
+
+# =========================
+# Stage 2: runtime
+# =========================
+FROM node:20-bookworm
+
+# Cài các dependency cần thiết cho sshx
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy binary từ rust stage
+COPY --from=rust-builder /usr/local/cargo/bin/sshx-server /usr/local/bin/sshx-server
+COPY --from=rust-builder /usr/local/cargo/bin/sshx-core /usr/local/bin/sshx-core
+
+# Copy source frontend
+COPY . .
+
+# Cài npm deps
+RUN npm install
+
+EXPOSE 5173 8080
+
+# Chạy song song sshx-server + npm dev
+CMD sh -c "sshx-server & npm run dev"
