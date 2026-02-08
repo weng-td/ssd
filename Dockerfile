@@ -1,13 +1,17 @@
 # =========================
 # Stage 1: build rust
 # =========================
-FROM rust:latest AS rust-builder
+FROM rust:1.79 AS rust-builder
+
+# 👉 CÀI PROTOC Ở ĐÂY
+RUN apt-get update && apt-get install -y \
+    protobuf-compiler \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
 COPY . .
 
-# Build sshx-server (sshx-core tự được build theo)
 RUN cargo build --release -p sshx-server
 
 
@@ -22,12 +26,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy binary đã build
 COPY --from=rust-builder /app/target/release/sshx-server /usr/local/bin/sshx-server
 
-# Copy frontend
 COPY . .
-
 RUN npm install
 
 EXPOSE 5173 8080
