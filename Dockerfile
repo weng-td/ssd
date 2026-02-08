@@ -5,12 +5,10 @@ FROM rust:1.75 AS rust-builder
 
 WORKDIR /app
 
-# Copy toàn bộ source
 COPY . .
 
-# Build & install sshx
-RUN cargo install --path crates/sshx-core
-RUN cargo install --path crates/sshx-server
+# Build sshx-server (sshx-core tự được build theo)
+RUN cargo build --release -p sshx-server
 
 
 # =========================
@@ -18,24 +16,20 @@ RUN cargo install --path crates/sshx-server
 # =========================
 FROM node:20-bookworm
 
-# Cài các dependency cần thiết cho sshx
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy binary từ rust stage
-COPY --from=rust-builder /usr/local/cargo/bin/sshx-server /usr/local/bin/sshx-server
-COPY --from=rust-builder /usr/local/cargo/bin/sshx-core /usr/local/bin/sshx-core
+# Copy binary đã build
+COPY --from=rust-builder /app/target/release/sshx-server /usr/local/bin/sshx-server
 
-# Copy source frontend
+# Copy frontend
 COPY . .
 
-# Cài npm deps
 RUN npm install
 
 EXPOSE 5173 8080
 
-# Chạy song song sshx-server + npm dev
 CMD sh -c "sshx-server & npm run dev"
