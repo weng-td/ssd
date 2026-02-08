@@ -13,6 +13,11 @@ export default defineConfig({
   plugins: [sveltekit()],
 
   server: {
+    host: true, // 👈 cho phép bind 0.0.0.0 (cloudflared cần)
+    allowedHosts: [
+      ".trycloudflare.com" // 👈 cho phép Quick Tunnel
+    ],
+
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8051",
