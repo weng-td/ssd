@@ -1,8 +1,9 @@
 import { execSync } from "node:child_process";
-
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 
+// Nếu sau này muốn lấy commit thật thì mở lại
+// const commitHash = execSync("git rev-parse --short HEAD").toString().trim();
 const commitHash = "dev";
 
 export default defineConfig({
@@ -13,11 +14,21 @@ export default defineConfig({
   plugins: [sveltekit()],
 
   server: {
-    host: true, // 👈 cho phép bind 0.0.0.0 (cloudflared cần)
+    // 🔥 BẮT BUỘC cho cloudflared
+    host: true,
+
+    // 🔥 Cho phép domain Quick Tunnel
     allowedHosts: [
-      ".trycloudflare.com" // 👈 cho phép Quick Tunnel
+      ".trycloudflare.com",
     ],
 
+    // 🔥 Fix màn hình trắng do HMR qua HTTPS tunnel
+    hmr: {
+      protocol: "wss",
+      clientPort: 443,
+    },
+
+    // Backend API (sshx-server)
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8051",
