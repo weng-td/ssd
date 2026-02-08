@@ -11,29 +11,29 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# ---- Copy workspace manifests ----
+# ---- Workspace manifest ----
 COPY Cargo.toml ./
 
-# ---- Copy crate manifests ----
+# ---- Crate manifests ----
 COPY crates/sshx-core/Cargo.toml crates/sshx-core/Cargo.toml
 COPY crates/sshx-server/Cargo.toml crates/sshx-server/Cargo.toml
 
-# ---- ⚠️ Copy src để Cargo thấy target ----
+# ---- ⚠️ BẮT BUỘC: copy src để Cargo thấy target ----
 COPY crates/sshx-core/src crates/sshx-core/src
 COPY crates/sshx-server/src crates/sshx-server/src
 
-# ---- Fetch deps (cache tốt, KHÔNG lỗi) ----
+# ---- Fetch deps (KHÔNG lỗi) ----
 RUN cargo fetch
 
-# ---- Copy phần còn lại (proto, config, v.v.) ----
+# ---- Copy phần còn lại (proto, config, etc.) ----
 COPY . .
 
-# ---- Build đúng binary ----
+# ---- Build ----
 RUN cargo build --release -p sshx-server
 
 
 # =========================
-# Stage 2: Runtime SIÊU NHẸ
+# Stage 2: Runtime siêu nhẹ
 # =========================
 FROM gcr.io/distroless/cc-debian12
 
