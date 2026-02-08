@@ -1,9 +1,8 @@
 # =========================
 # Stage 1: build rust
 # =========================
-FROM rust:1.79 AS rust-builder
+FROM rust:latest AS rust-builder
 
-# 👉 CÀI PROTOC Ở ĐÂY
 RUN apt-get update && apt-get install -y \
     protobuf-compiler \
     ca-certificates \
