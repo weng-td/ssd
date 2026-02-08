@@ -11,31 +11,36 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# ---- Cache dependency (quan trọng) ----
+# ---- Copy workspace manifests ----
 COPY Cargo.toml ./
+
+# ---- Copy crate manifests ----
 COPY crates/sshx-core/Cargo.toml crates/sshx-core/Cargo.toml
 COPY crates/sshx-server/Cargo.toml crates/sshx-server/Cargo.toml
 
+# ---- ⚠️ Copy src để Cargo thấy target ----
+COPY crates/sshx-core/src crates/sshx-core/src
+COPY crates/sshx-server/src crates/sshx-server/src
+
+# ---- Fetch deps (cache tốt, KHÔNG lỗi) ----
 RUN cargo fetch
 
-# ---- Copy source ----
+# ---- Copy phần còn lại (proto, config, v.v.) ----
 COPY . .
 
-# ---- Build ----
+# ---- Build đúng binary ----
 RUN cargo build --release -p sshx-server
 
 
 # =========================
-# Stage 2: Runtime siêu nhẹ
+# Stage 2: Runtime SIÊU NHẸ
 # =========================
 FROM gcr.io/distroless/cc-debian12
 
 WORKDIR /app
 
-# Copy đúng 1 binary
 COPY --from=builder /app/target/release/sshx-server /usr/local/bin/sshx-server
 
 EXPOSE 8051
 
-# Distroless không có shell → exec trực tiếp
 ENTRYPOINT ["/usr/local/bin/sshx-server"]
