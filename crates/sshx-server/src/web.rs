@@ -14,7 +14,7 @@ mod admin;
 
 /// Returns the web application server, routed with Axum.
 pub fn app() -> Router<Arc<ServerState>> {
-    let root_spa = ServeFile::new("build/spa.html")
+    let root_spa = ServeFile::new("build/index.html")
         .precompressed_gzip()
         .precompressed_br();
 

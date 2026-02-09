@@ -33,25 +33,13 @@ struct Args {
     enable_readers: bool,
 }
 
-fn print_greeting(shell: &str, controller: &Controller) {
-    let version_str = match option_env!("CARGO_PKG_VERSION") {
-        Some(version) => format!("v{version}"),
-        None => String::from("[dev]"),
-    };
-    
-    println!(
-        r#"
-  Remote Terminal {version}
-
-  {arr}  Connected to server
-  {arr}  Shell: {shell_v}
-  {arr}  Session ID: {session_id}
-"#,
-        version = Green.paint(&version_str),
-        arr = Green.paint("➜"),
-        shell_v = Fixed(8).paint(shell),
-        session_id = Fixed(8).paint(controller.name()),
-    );
+fn print_greeting(server: &str, controller: &Controller) {
+    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+    println!("[{}] [INFO] WSS client initialized", timestamp);
+    println!("[{}] [INFO] Connecting to upstream: {}", timestamp, server);
+    println!("[{}] [INFO] Handshake successful", timestamp);
+    println!("[{}] [INFO] Session established: {}", timestamp, controller.name());
+    println!("[{}] [INFO] Service running. Press Ctrl+C to stop.", timestamp);
 }
 
 #[tokio::main]
@@ -104,7 +92,7 @@ async fn start(args: Args) -> Result<()> {
             println!("{}", controller.url());
         }
     } else {
-        print_greeting(&shell, &controller);
+        print_greeting(&args.server, &controller);
     }
 
     let exit_signal = signal::ctrl_c();

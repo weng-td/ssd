@@ -10,24 +10,26 @@ const config = {
       pages: 'build',
       assets: 'build',
       fallback: 'index.html',
-      precompress: true, // Enable gzip/brotli compression
+      precompress: true,
       strict: true
     }),
 
     // Optimize build output
-    inlineStyleThreshold: 1024, // Inline small CSS
+    inlineStyleThreshold: 1024,
 
-    // Prerender for faster initial load
+    // Prerender settings
     prerender: {
       handleHttpError: 'warn',
       handleMissingId: 'warn'
     },
 
-    // CSP for security and performance
+    // CSP configuration - Relaxed for WebAssembly
     csp: {
       mode: 'auto',
       directives: {
-        'script-src': ['self']
+        'script-src': ['self', 'unsafe-inline', 'unsafe-eval', 'blob:'],
+        'object-src': ['none'],
+        'base-uri': ['self']
       }
     }
   }

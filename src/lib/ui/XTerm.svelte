@@ -130,21 +130,28 @@
 
     term = new Terminal({
       allowTransparency: false,
-      cursorBlink: false,
+      cursorBlink: false, // Performance: Disable blinking to reduce repaints
       cursorStyle: "block",
-      // This is the monospace font family configured in Tailwind.
       fontFamily:
         '"Fira Code VF", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
       fontSize: 14,
       fontWeight: 400,
       fontWeightBold: 500,
       lineHeight: 1.06,
-      scrollback: $settings.scrollback,
+      scrollback: 1000, // Performance: Limit scrollback buffer
       theme,
+      drawBoldTextInBrightColors: false, // Performance
+      fastScrollModifier: "alt", // Performance
+      windowOptions: {
+        fullscreenWin: false,
+        maximizeWin: false,
+        minimizeWin: false,
+      },
     });
 
-    // Keyboard shortcuts for natural text editing.
+    // Keyboard shortcuts...
     term.attachCustomKeyEventHandler((event) => {
+      // ... (keep existing logic)
       if (
         (isMac && event.metaKey && !event.ctrlKey && !event.altKey) ||
         (!isMac && !event.metaKey && event.ctrlKey && !event.altKey)
@@ -164,7 +171,21 @@
     });
 
     term.loadAddon(new WebLinksAddon());
-    term.loadAddon(new WebglAddon());
+    
+    // Performance: Load WebGL addon with safe fallback
+    try {
+      const webgl = new WebglAddon();
+      // webgl.onContextLoss is not available in all versions, wrapped in try-catch
+      try {
+          webgl.onContextLoss(() => {
+            webgl.dispose();
+          });
+      } catch (e) {}
+      term.loadAddon(webgl);
+    } catch (e) {
+      console.warn("WebGL not supported, falling back to canvas/dom renderer");
+    }
+
     term.loadAddon(new ImageAddon({ enableSizeReports: false }));
 
     term.open(termEl);

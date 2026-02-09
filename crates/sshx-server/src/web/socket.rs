@@ -73,7 +73,9 @@ pub async fn get_session_ws(
 async fn handle_socket(socket: &mut WebSocket, session: Arc<Session>) -> Result<()> {
     /// Send a message to the client over WebSocket.
     async fn send(socket: &mut WebSocket, msg: WsServer) -> Result<()> {
-        let mut buf = Vec::new();
+        // Optimization: Pre-allocate buffer to avoid frequent re-allocations
+        // 4KB is enough for most terminal updates
+        let mut buf = Vec::with_capacity(4096);
         ciborium::ser::into_writer(&msg, &mut buf)?;
         socket.send(Message::Binary(Bytes::from(buf))).await?;
         Ok(())
