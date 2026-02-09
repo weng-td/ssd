@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #00ff00;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .connection-form {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .connection-form input {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+
+        .connection-form input::placeholder {
+            color: rgba(0, 255, 0, 0.5);
+        }
+
+        .connection-form button {
+            padding: 10px 30px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .connection-form button:hover {
+            background: #00cc00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .connection-form button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .terminal-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal-output {
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+        }
+
+        .terminal-line.error {
+            color: #ff0000;
+        }
+
+        .terminal-line.info {
+            color: #00ccff;
+        }
+
+        .terminal-line.success {
+            color: #00ff00;
+        }
+
+        .input-area {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 20px;
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .input-area button:hover {
+            background: #00cc00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🖥️ Remote Terminal</h1>
+        <div class="status">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Disconnected</span>
+            </div>
+            <div class="status-indicator">
+                <span>Session: <span id="sessionId">-</span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="connection-form">
+        <input type="text" id="serverUrl" placeholder="Server URL (e.g., ws://localhost:8051/api/s/session-name)"
+            value="ws://localhost:8051">
+        <input type="text" id="sessionName" placeholder="Session Name" value="">
+        <button id="connectBtn" onclick="connect()">Connect</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+    </div>
+
+    <div class="terminal-container scrollbar" id="terminalContainer">
+        <div class="terminal-output" id="terminalOutput">
+            <div class="terminal-line info">Welcome to Remote Terminal</div>
+            <div class="terminal-line info">Enter server URL and session name, then click Connect</div>
+            <div class="terminal-line">─────────────────────────────────────────────────────</div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="commandInput" placeholder="Type command and press Enter..." disabled>
+        <button id="sendBtn" onclick="sendCommand()" disabled>Send</button>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const sessionIdEl = document.getElementById('sessionId');
+        const terminalOutput = document.getElementById('terminalOutput');
+        const terminalContainer = document.getElementById('terminalContainer');
+        const commandInput = document.getElementById('commandInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const serverUrlInput = document.getElementById('serverUrl');
+        const sessionNameInput = document.getElementById('sessionName');
+
+        function addLine(text, type = '') {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            terminalOutput.appendChild(line);
+            terminalContainer.scrollTop = terminalContainer.scrollHeight;
+        }
+
+        function updateStatus(connected, sessionId = '-') {
+            isConnected = connected;
+            statusDot.className = `status-dot ${connected ? 'connected' : ''}`;
+            statusText.textContent = connected ? 'Connected' : 'Disconnected';
+            sessionIdEl.textContent = sessionId;
+
+            commandInput.disabled = !connected;
+            sendBtn.disabled = !connected;
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            serverUrlInput.disabled = connected;
+            sessionNameInput.disabled = connected;
+        }
+
+        function connect() {
+            const serverUrl = serverUrlInput.value.trim();
+            const sessionName = sessionNameInput.value.trim() || 'default';
+
+            if (!serverUrl) {
+                addLine('Error: Please enter server URL', 'error');
+                return;
+            }
+
+            // Build WebSocket URL
+            let wsUrl = serverUrl;
+            if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+                wsUrl = 'ws://' + wsUrl;
+            }
+            if (!wsUrl.includes('/api/s/')) {
+                wsUrl = wsUrl.replace(/\/$/, '') + '/api/s/' + sessionName;
+            }
+
+            addLine(`Connecting to ${wsUrl}...`, 'info');
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    addLine('Connected successfully!', 'success');
+                    updateStatus(true, sessionName);
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        addLine(`Server: ${JSON.stringify(data, null, 2)}`);
+                    } catch (e) {
+                        addLine(`Server: ${event.data}`);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    addLine(`WebSocket error: ${error.message || 'Connection failed'}`, 'error');
+                };
+
+                ws.onclose = () => {
+                    addLine('Connection closed', 'info');
+                    updateStatus(false);
+                    ws = null;
+                };
+            } catch (error) {
+                addLine(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                addLine('Disconnecting...', 'info');
+            }
+        }
+
+        function sendCommand() {
+            const command = commandInput.value.trim();
+            if (!command || !isConnected) return;
+
+            addLine(`> ${command}`, 'success');
+
+            try {
+                ws.send(JSON.stringify({
+                    type: 'input',
+                    data: command + '\n'
+                }));
+                commandInput.value = '';
+            } catch (error) {
+                addLine(`Error sending command: ${error.message}`, 'error');
+            }
+        }
+
+        // Enter key to send command
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendCommand();
+            }
+        });
+
+        // Auto-focus command input when connected
+        setInterval(() => {
+            if (isConnected && document.activeElement !== commandInput) {
+                commandInput.focus();
+            }
+        }, 100);
+    </script>
+</body>
+
+</html>

@@ -16,9 +16,20 @@
     unsub = page.subscribe(p => {
       // If we are navigating to anything other than login, check auth
       if (!p.url.pathname.startsWith('/login')) {
-        const auth = localStorage.getItem('auth');
-        if (!auth) {
-           goto('/login');
+        const authToken = localStorage.getItem('authToken');
+        const authTime = localStorage.getItem('authTime');
+        
+        if (!authToken || !authTime) {
+          goto('/login');
+          return;
+        }
+        
+        // Check if session expired (24 hours)
+        const elapsed = Date.now() - parseInt(authTime);
+        if (elapsed > 24 * 60 * 60 * 1000) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authTime');
+          goto('/login');
         }
       }
     });

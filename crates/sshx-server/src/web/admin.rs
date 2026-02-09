@@ -8,12 +8,23 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Sha256, Digest};
 
 use crate::ServerState;
+
+// Default password: titeo123
+const DEFAULT_PASSWORD: &str = "titeo123";
 
 #[derive(Deserialize)]
 struct LoginRequest {
     password: String,
+}
+
+#[derive(Serialize)]
+struct LoginResponse {
+    success: bool,
+    token: String,
+    message: String,
 }
 
 #[derive(Serialize)]
@@ -50,11 +61,30 @@ pub fn routes() -> Router<Arc<ServerState>> {
         .route("/devices", get(list_devices))
 }
 
+fn generate_token(password: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(password.as_bytes());
+    hasher.update(chrono::Utc::now().timestamp().to_string().as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 async fn login(Json(payload): Json<LoginRequest>) -> Response {
-    if payload.password == "1234" {
-        (StatusCode::OK, Json("Login successful")).into_response()
+    // Verify password
+    if payload.password == DEFAULT_PASSWORD {
+        let token = generate_token(&payload.password);
+        let response = LoginResponse {
+            success: true,
+            token,
+            message: "Login successful".to_string(),
+        };
+        (StatusCode::OK, Json(response)).into_response()
     } else {
-        (StatusCode::UNAUTHORIZED, "Invalid password").into_response()
+        let response = LoginResponse {
+            success: false,
+            token: String::new(),
+            message: "Invalid password".to_string(),
+        };
+        (StatusCode::UNAUTHORIZED, Json(response)).into_response()
     }
 }
 

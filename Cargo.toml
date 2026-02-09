@@ -25,8 +25,29 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["env-filter", "fmt", "ansi"] }
 
 [profile.release]
-strip = true
-lto = true           # Link-time optimization for smaller binary
+strip = true         # Strip symbols
+lto = "fat"          # Full link-time optimization
 codegen-units = 1    # Better optimization, slower compile
 opt-level = "z"      # Optimize for size
 panic = "abort"      # Smaller binary, no unwinding
+
+# Ultra-optimized profile for production
+[profile.production]
+inherits = "release"
+lto = "fat"
+opt-level = 3        # Maximum performance
+codegen-units = 1
+strip = true
+panic = "abort"
+
+# Development with some optimizations
+[profile.dev]
+opt-level = 1        # Some optimization in dev mode
+debug = true
+strip = false
+
+# Dependencies optimization (even in dev mode)
+[profile.dev.package."*"]
+opt-level = 2        # Optimize dependencies in dev
+debug = false
+
