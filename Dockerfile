@@ -5,6 +5,7 @@ FROM rust:1.83-slim AS rust-builder
 
 RUN apt-get update && apt-get install -y \
     protobuf-compiler \
+    sudo \
     ca-certificates \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
