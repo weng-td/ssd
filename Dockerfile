@@ -1,19 +1,27 @@
 # =========================
 # Stage 1: Build sshx-server
 # =========================
-FROM rust:1.83-slim AS rust-builder
+# Use latest Rust to support edition2024 features
+# getrandom v0.4.1 requires rust >= 1.85
+FROM rust:1.85-slim AS rust-builder
 
 RUN apt-get update && apt-get install -y \
     protobuf-compiler \
+    libprotobuf-dev \
     sudo \
     ca-certificates \
     build-essential \
+    pkg-config \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
-RUN sudo apt-get install -y protobuf-compiler libprotobuf-dev --allow-unauthenticated
+
 WORKDIR /app
 
 # ---- Copy toàn bộ workspace (tránh thiếu crate) ----
 COPY . .
+
+# ---- Force older getrandom version to avoid edition2024 issues if rust:1.85 includes old cargo ----
+# RUN cargo update -p getrandom --precise 0.2.14
 
 # ---- Build đúng binary ----
 RUN cargo build --release -p sshx-server
