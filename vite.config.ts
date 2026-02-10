@@ -7,7 +7,7 @@ const commitHash = "dev";
 
 // Allow configuring remote server via environment variable
 // Usage: VITE_SERVER_URL=http://192.168.1.100:8051 npm run dev
-const serverUrl = process.env.VITE_SERVER_URL || "http://127.0.0.1:8051";
+const serverUrl = process.env.VITE_SERVER_URL || "https://industrial-rosemonde-app123123-bde611ac.koyeb.app/";
 
 export default defineConfig({
   define: {
