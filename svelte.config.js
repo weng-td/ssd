@@ -24,14 +24,15 @@ const config = {
     },
 
     // CSP configuration - Relaxed for WebAssembly
-    csp: {
+    // CSP configuration - Relaxed for WebAssembly
+    /* csp: {
       mode: 'auto',
       directives: {
         'script-src': ['self', 'unsafe-inline', 'unsafe-eval', 'blob:'],
         'object-src': ['none'],
         'base-uri': ['self']
       }
-    }
+    } */
   }
 };
 

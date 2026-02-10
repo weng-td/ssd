@@ -15,15 +15,11 @@
   import { Srocket } from "./srocket";
   import type { WsClient, WsServer, WsUser, WsWinsize } from "./protocol";
   import { makeToast } from "./toast";
-  import Chat, { type ChatMessage } from "./ui/Chat.svelte";
-  import ChooseName from "./ui/ChooseName.svelte";
-  import NameList from "./ui/NameList.svelte";
+
   import NetworkInfo from "./ui/NetworkInfo.svelte";
   import Settings from "./ui/Settings.svelte";
   import Toolbar from "./ui/Toolbar.svelte";
   import XTerm from "./ui/XTerm.svelte";
-  import Avatars from "./ui/Avatars.svelte";
-  import LiveCursor from "./ui/LiveCursor.svelte";
   import { slide } from "./action/slide";
   import { TouchZoom, INITIAL_ZOOM } from "./action/touchZoom";
   import { arrangeNewTerminal } from "./arrange";
@@ -59,7 +55,6 @@
   let center = [0, 0];
   let zoom = INITIAL_ZOOM;
 
-  let showChat = false; // @hmr:keep
   let settingsOpen = false; // @hmr:keep
   let showNetworkInfo = false; // @hmr:keep
 
@@ -123,8 +118,7 @@
   let resizingCell = [0, 0]; // Pixel dimensions of a single terminal cell.
   let resizingSize: WsWinsize; // Last resize message sent.
 
-  let chatMessages: ChatMessage[] = [];
-  let newMessages = false;
+
 
   let serverLatencies: number[] = [];
   let shellLatencies: number[] = [];
@@ -192,10 +186,7 @@
             }
           }
         } else if (message.hear) {
-          const [uid, name, msg] = message.hear;
-          chatMessages.push({ uid, name, msg, sentAt: new Date() });
-          chatMessages = chatMessages;
-          if (!showChat) newMessages = true;
+          // Chat disabled
         } else if (message.shellLatency !== undefined) {
           const shellLatency = Number(message.shellLatency);
           shellLatencies = [...shellLatencies, shellLatency].slice(-10);
@@ -351,7 +342,8 @@
         }
       }
 
-      sendCursor({ setCursor: normalizePosition(event) });
+      // Optimization: Disable cursor tracking
+      // sendCursor({ setCursor: normalizePosition(event) });
     }
 
     function handleMouseEnd(event: MouseEvent) {
@@ -401,13 +393,9 @@
   >
     <Toolbar
       {connected}
-      {newMessages}
+      newMessages={false}
       {hasWriteAccess}
       on:create={handleCreate}
-      on:chat={() => {
-        showChat = !showChat;
-        newMessages = false;
-      }}
       on:settings={() => {
         settingsOpen = true;
       }}
@@ -431,22 +419,9 @@
     {/if}
   </div>
 
-  {#if showChat}
-    <div
-      class="absolute flex flex-col justify-end inset-y-4 right-4 w-80 pointer-events-none z-10"
-    >
-      <Chat
-        {userId}
-        messages={chatMessages}
-        on:chat={(event) => srocket?.send({ chat: event.detail })}
-        on:close={() => (showChat = false)}
-      />
-    </div>
-  {/if}
+
 
   <Settings open={settingsOpen} on:close={() => (settingsOpen = false)} />
-
-  <ChooseName />
 
   <!--
     Dotted circle background appears underneath the rest of the elements, but
@@ -478,9 +453,6 @@
       <div class="text-yellow-400">Connecting…</div>
     {/if}
 
-    <div class="mt-4">
-      <NameList {users} />
-    </div>
   </div>
 
   <div class="absolute inset-0 overflow-hidden touch-none" bind:this={fabricEl}>
@@ -539,14 +511,7 @@
           }}
         />
 
-        <!-- User avatars -->
-        <div class="absolute bottom-2.5 right-2.5 pointer-events-none">
-          <Avatars
-            users={users.filter(
-              ([uid, user]) => uid !== userId && user.focus === id,
-            )}
-          />
-        </div>
+        <!-- User avatars removed -->
 
         <!-- Interactable element for resizing -->
         <div
@@ -563,24 +528,6 @@
           }}
           on:pointerdown={(event) => event.stopPropagation()}
         />
-      </div>
-    {/each}
-
-    {#each users.filter(([id, user]) => id !== userId && user.cursor !== null) as [id, user] (id)}
-      <div
-        class="absolute"
-        style:left={OFFSET_LEFT_CSS}
-        style:top={OFFSET_TOP_CSS}
-        style:transform-origin={OFFSET_TRANSFORM_ORIGIN_CSS}
-        transition:fade|local={{ duration: 200 }}
-        use:slide={{
-          x: user.cursor?.[0] ?? 0,
-          y: user.cursor?.[1] ?? 0,
-          center,
-          zoom,
-        }}
-      >
-        <LiveCursor {user} />
       </div>
     {/each}
   </div>
