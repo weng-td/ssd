@@ -29,7 +29,8 @@
 
   async function fetchDevices() {
     try {
-      const res = await fetch('/api/devices');
+      const API_BASE = import.meta.env.VITE_API_BASE;
+      const res = await fetch(`${API_BASE}/api/devices`);
       if (res.ok) {
         const data = await res.json();
         devices = data.devices;

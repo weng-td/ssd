@@ -35,8 +35,9 @@
     error = '';
 
     try {
-      // Call server API for authentication
-      const response = await fetch('/api/login', {
+      // Call server API for authentication (using env variable)
+      const API_BASE = import.meta.env.VITE_API_BASE;
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
