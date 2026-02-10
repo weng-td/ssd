@@ -129,9 +129,7 @@
       </button>
     </form>
 
-    <div class="footer">
-      <p class="hint">Default password: <code>titeo123</code></p>
-    </div>
+
   </div>
 </div>
 
