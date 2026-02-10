@@ -135,7 +135,9 @@
       ? await (await Encrypt.new(writePassword)).zeros()
       : null;
 
-    srocket = new Srocket<WsServer, WsClient>(`/api/s/${id}`, {
+    // Use direct Koyeb API URL to bypass proxy issues
+    const API_BASE = "https://industrial-rosemonde-app123123-bde611ac.koyeb.app";
+    srocket = new Srocket<WsServer, WsClient>(`${API_BASE}/api/s/${id}`, {
       onMessage(message) {
         if (message.hello) {
           userId = message.hello[0];
