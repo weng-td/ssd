@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
-
+RUN sudo apt-get install -y protobuf-compiler libprotobuf-dev --allow-unauthenticated
 WORKDIR /app
 
 # ---- Copy toàn bộ workspace (tránh thiếu crate) ----

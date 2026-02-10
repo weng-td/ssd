@@ -21,6 +21,7 @@ deadpool = "0.12.2"
 deadpool-redis = "0.18.0"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink"] }
 hmac = "0.12.1"
+getrandom.workspace = true
 http = "1.2.0"
 parking_lot = "0.12.1"
 prost.workspace = true
