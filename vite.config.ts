@@ -7,7 +7,7 @@ const commitHash = "dev";
 
 // Allow configuring remote server via environment variable
 // Usage: VITE_SERVER_URL=http://192.168.1.100:8051 npm run dev
-const serverUrl = process.env.VITE_SERVER_URL || "http://localhost:8051";
+const serverUrl = process.env.VITE_SERVER_URL || "http://127.0.0.1:8051";
 
 export default defineConfig({
   define: {
@@ -40,7 +40,7 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunks
           'vendor-svelte': ['svelte', 'svelte/internal'],
-          'vendor-xterm': ['sshx-xterm'],
+
         },
         // Optimize chunk naming
         chunkFileNames: 'chunks/[name]-[hash].js',
@@ -73,7 +73,7 @@ export default defineConfig({
 
   // Optimize dependencies
   optimizeDeps: {
-    include: ['svelte', 'sshx-xterm'],
+    include: ['svelte'],
     exclude: [],
   },
 });
