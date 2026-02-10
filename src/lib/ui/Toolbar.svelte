@@ -11,7 +11,7 @@
 
   export let connected: boolean;
   export let hasWriteAccess: boolean | undefined;
-  export let newMessages: boolean;
+
 
   const dispatch = createEventDispatcher<{
     create: void;
