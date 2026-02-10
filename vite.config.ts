@@ -24,19 +24,7 @@ export default defineConfig({
 
 
     // Code splitting for better caching
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Vendor chunks
-          'vendor-svelte': ['svelte', 'svelte/internal'],
 
-        },
-        // Optimize chunk naming
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        entryFileNames: 'entries/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
-      },
-    },
 
     // Enable source maps only in dev
     sourcemap: false,
