@@ -1,0 +1,2 @@
+# Proxy API requests to Koyeb backend
+/api/*  https://industrial-rosemonde-app123123-bde611ac.koyeb.app/api/:splat  200

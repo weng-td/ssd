@@ -37,7 +37,7 @@ tokio-tungstenite = { version = "0.26.1", default-features = false, features = [
 tonic.workspace = true
 tonic-reflection.workspace = true
 tower = { version = "0.4.13", default-features = false, features = ["steer"] }
-tower-http = { version = "0.6.2", default-features = false, features = ["fs", "trace"] }
+tower-http = { version = "0.6.2", default-features = false, features = ["fs", "trace", "cors"] }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 zstd = { version = "0.12.4", default-features = false }
