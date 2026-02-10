@@ -393,7 +393,7 @@
   >
     <Toolbar
       {connected}
-      newMessages={false}
+
       {hasWriteAccess}
       on:create={handleCreate}
       on:settings={() => {
