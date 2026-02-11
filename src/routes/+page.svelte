@@ -100,6 +100,44 @@
     if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${bytes} B`;
   }
+
+  let bulkCommand = '';
+  let executing = false;
+  let executeMessage = '';
+
+  async function executeCommandOnAll() {
+    if (!bulkCommand.trim()) {
+      executeMessage = 'Please enter a command';
+      setTimeout(() => executeMessage = '', 3000);
+      return;
+    }
+
+    executing = true;
+    executeMessage = '';
+
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE;
+      const res = await fetch(`${API_BASE}/api/execute-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: bulkCommand }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        executeMessage = `✓ ${data.message}`;
+        bulkCommand = '';
+      } else {
+        executeMessage = '✗ Failed to execute command';
+      }
+    } catch (e) {
+      executeMessage = '✗ Error connecting to server';
+    } finally {
+      executing = false;
+      setTimeout(() => executeMessage = '', 5000);
+    }
+  }
+
 </script>
 
 <div class="min-h-screen bg-zinc-900 text-zinc-100 font-sans">
@@ -163,6 +201,32 @@
             <div class="bg-green-500 h-full transition-all duration-500" style="width: {(stats.used_disk / stats.total_disk) * 100}%"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Bulk Command Execution -->
+      <div class="bg-zinc-800 p-4 rounded-lg border border-zinc-700 mb-8">
+        <div class="text-zinc-300 text-sm font-bold mb-3">Execute Command on All Devices</div>
+        <div class="flex gap-2">
+          <input 
+            type="text"
+            bind:value={bulkCommand}
+            placeholder="Enter command (e.g., ls -la, uptime)"
+            class="flex-1 bg-zinc-900 border border-zinc-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+            disabled={executing || devices.length === 0}
+          />
+          <button
+            on:click={executeCommandOnAll}
+            disabled={executing || devices.length === 0}
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded text-sm font-medium transition-colors"
+          >
+            {executing ? 'Executing...' : 'Run on All'}
+          </button>
+        </div>
+        {#if executeMessage}
+          <div class="mt-2 text-sm" class:text-green-400={executeMessage.startsWith('✓')} class:text-red-400={executeMessage.startsWith('✗')}>
+            {executeMessage}
+          </div>
+        {/if}
       </div>
     {/if}
 

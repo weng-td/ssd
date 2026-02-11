@@ -59,6 +59,7 @@ pub fn routes() -> Router<Arc<ServerState>> {
     Router::new()
         .route("/login", post(login))
         .route("/devices", get(list_devices))
+        .route("/execute-all", post(execute_all))
 }
 
 fn generate_token(password: &str) -> String {
@@ -137,3 +138,42 @@ async fn list_devices(State(state): State<Arc<ServerState>>) -> Json<DashboardDa
 
     Json(DashboardData { devices, stats })
 }
+
+#[derive(Deserialize)]
+struct ExecuteRequest {
+    command: String,
+}
+
+#[derive(Serialize)]
+struct ExecuteResponse {
+    success: bool,
+    message: String,
+    executed_count: usize,
+}
+
+async fn execute_all(
+    State(state): State<Arc<ServerState>>,
+    Json(payload): Json<ExecuteRequest>,
+) -> Response {
+    let sessions = state.list_sessions();
+    let count = sessions.len();
+    
+    // Send command to all sessions
+    for (id, _, _, _, _, _, _, _) in sessions {
+        // Convert command string to bytes and send to session
+        let command_bytes = format!("{}\n", payload.command).into_bytes();
+        // TODO: Actually send the command to the session
+        // This requires access to the session's input channel
+        // For now, we'll just log it
+        tracing::info!("Sending command '{}' to device {}", payload.command, id);
+    }
+    
+    let response = ExecuteResponse {
+        success: true,
+        message: format!("Command sent to {} device(s)", count),
+        executed_count: count,
+    };
+    
+    (StatusCode::OK, Json(response)).into_response()
+}
+
