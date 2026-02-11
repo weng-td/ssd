@@ -5,7 +5,6 @@ use std::sync::Arc;
 use axum::routing::{any, get_service};
 use axum::Router;
 use tower_http::services::{ServeDir, ServeFile};
-use tower_http::cors::CorsLayer;
 
 use crate::ServerState;
 
@@ -33,7 +32,6 @@ pub fn app() -> Router<Arc<ServerState>> {
 /// Routes for the backend web API server.
 fn backend() -> Router<Arc<ServerState>> {
     Router::new()
-        .layer(CorsLayer::permissive())
         .merge(admin::routes())
         .route("/s/{name}", any(socket::get_session_ws))
 }
